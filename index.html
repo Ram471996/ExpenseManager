@@ -2,7 +2,9 @@
 <html>
 <head>
   <title>Expense Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     body { font-family: Arial; padding: 20px; max-width: 900px; margin: auto; }
     input, select, button { margin: 5px; padding: 8px; }
@@ -11,6 +13,7 @@
     h2 { text-align: center; }
   </style>
 </head>
+
 <body>
   <h2>Expense Manager</h2>
 
@@ -32,7 +35,12 @@
 
   <table id="table">
     <thead>
-      <tr><th>Date</th><th>Description</th><th>Amount</th><th>Type</th></tr>
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Amount</th>
+        <th>Type</th>
+      </tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -40,12 +48,12 @@
   <canvas id="chart" height="120"></canvas>
 
 <script>
-// 🔴 IMPORTANT: Replace with your deployed Apps Script URL
 const scriptURL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
 
 let expenses = [];
 let chart;
 
+// Add expense
 async function addExpense() {
   const date = document.getElementById('date').value;
   const desc = document.getElementById('desc').value;
@@ -69,8 +77,9 @@ async function addExpense() {
   loadExpenses();
 }
 
+// Load expenses
 async function loadExpenses() {
-  const res = await fetch(scriptURL, { method: 'GET', mode: 'cors' });
+  const res = await fetch(scriptURL);
   const data = await res.json();
   expenses = data;
 
@@ -79,6 +88,7 @@ async function loadExpenses() {
   renderTotal();
 }
 
+// Table
 function renderTable() {
   const tbody = document.querySelector('#table tbody');
   tbody.innerHTML = '';
@@ -86,4 +96,42 @@ function renderTable() {
   expenses.forEach(e => {
     const row = `<tr>
       <td>${e.date}</td>
+      <td>${e.desc}</td>
+      <td>₹${e.amount}</td>
+      <td>${e.type}</td>
+    </tr>`;
+    tbody.innerHTML += row;
+  });
+}
+
+// Total
+function renderTotal() {
+  const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+  document.getElementById('total').innerText = `Total Spent: ₹${total}`;
+}
+
+// Chart
+function renderChart() {
+  const totals = {};
+  expenses.forEach(e => {
+    totals[e.type] = (totals[e.type] || 0) + Number(e.amount);
+  });
+
+  const ctx = document.getElementById('chart').getContext('2d');
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(totals),
+      datasets: [{ data: Object.values(totals) }]
+    }
+  });
+}
+
+loadExpenses();
+</script>
+
+</body>
 </html>
